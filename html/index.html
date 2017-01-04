@@ -1,0 +1,553 @@
+<html>
+<head>
+<title>Recognition with Bag of Words</title>
+<link href='http://fonts.googleapis.com/css?family=Nunito:300|Crimson+Text|Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" title="Default" href="styles/github.css">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>  
+
+<link rel="stylesheet" href="highlighting/styles/default.css">
+<script src="highlighting/highlight.pack.js"></script>
+
+<style type="text/css">
+body {
+	margin: 0px;
+	width: 100%;
+	font-family: 'Crimson Text', serif;
+	font-size: 20px;
+	background: #fcfcfc;
+}
+h1 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 28px;
+	margin: 25px 0px 0px 0px;
+	text-transform: lowercase;
+
+}
+
+h2 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 32px;
+	margin: 15px 0px 35px 0px;
+	color: #333;	
+	word-spacing: 3px;
+}
+
+h3 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 26px;
+	margin: 10px 0px 10px 0px;
+	color: #333;
+	word-spacing: 2px;
+}
+h4 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 22px;
+	margin: 10px 0px 10px 0px;
+	color: #333;
+	word-spacing: 2px;
+}
+
+h5 {
+	font-family: 'Nunito', sans-serif;
+	font-weight: normal;
+	font-size: 18px;
+	margin: 10px 0px 10px 0px;
+	color: #111;
+	word-spacing: 2px;
+}
+
+p, li {
+	color: #444;
+}
+
+a {
+	color: #DE3737;
+}
+
+.container {
+	margin: 0px auto 0px auto;
+	width: 1160px;
+}
+
+.container2 img {
+	padding:10;
+}
+
+
+#header {
+	background: #333;
+	width: 100%;
+}
+
+#headersub {
+	color: #ccc;
+	width: 960px;
+	margin: 0px auto 0px auto;
+	padding: 20px 0px 20px 0px;
+}
+
+.chart {
+	width: 480px;
+}
+.lol {
+	font-size: 16px;
+	color: #888;
+	font-style: italic;
+}
+.sep {
+	height: 1px;
+	width: 100%;
+	background: #999;
+	margin: 20px 0px 20px 0px;
+}
+.footer{
+	font-size: 16px;
+}
+.latex {
+	width: 100%;
+}
+
+.latex img {
+	display: block;
+	margin: 0px auto 0px auto;
+}
+
+pre {
+	font-family: 'Droid Sans Mono';
+	font-size: 14px;
+}
+
+table td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+table td img {
+  text-align: center;
+  vertical-align: middle;
+}
+
+#contents a {
+}
+</style>
+<script type="text/javascript">
+    hljs.initHighlightingOnLoad();
+</script>
+</head>
+<body>
+<div id="header" >
+<div id="headersub">
+<h1>Conner Kobus</h1>
+</div>
+</div>
+<div class="container">
+
+<h2>Project 4 / Scene Recognition with Bag of Words</h2>
+
+<!-- <div style="float: right; padding: 20px">
+<img src="placeholder.jpg" />
+<p style="font-size: 14px">Example of a right floating element.</p>
+</div> -->
+
+	<p> 	The focus of this project was to examine different scene recognition methods. First, I start out describing the simplistic Tiny Images with Nearest Neighbor method. Next, I implement a more complicated Bag of SIFT representation to use with the Nearest Neighbor classifier for more accurate results. Finally, I discuss the creation of a Linear SVM classifier to use with the Bag of SIFT representation, which produced the most accurate results of all the methods.</p>
+
+
+<div style="clear:both">
+<h3>Tiny Images Representation and Nearest Neighbor Classifier</h3>
+
+	<p>
+		To start, I implement a very simplistic image representation and classifier. The tiny image representation resizes the images to 16x16 thumbnails, which creates a 256-length feature. Then, the nearest neighbor classifier finds the nearest training example for a test feature and assigns the test feature the same label of that training example. This method of classification has many shortcomings, as it is vulnerable to training noise, suffers as feature dimensionality increases, and the features have all their high frequencies removed when resized to 16x16 images. Below you can see the confusion matrix produced using this method, which gave an accuracy of 20.1% with a computation time of 13 seconds.
+	</p>
+
+	<center>
+		<br>
+		Confusion matrix for Tiny Images and Nearest Neighbor method:
+		<br>
+		<img src="TinyNN.png"; width = "40%"/>
+		<br>
+			Accuracy (mean of diagonal of confusion matrix) is 0.201
+		<p>
+	</center>
+
+<h3>Bag of SIFT Representation and Nearest Neighbor Classifier</h3>
+
+	<p> 	In order to increase accuracy, I needed a better representation for my images than the tiny images representation. I was able to do this by using the Bag of SIFT representation. This representation ignores spatial information in the image by creating a histogram of the frequency of visual words. The vocabulary for these visual words is established by sampling a large amount of SIFT features from the training set and clustering them with kmeans. The step size used when creating the vocab and SIFT features determines the sampling density used in their creation. The vocab size is the number of clusters created and also the number of bins used when creating the histogram. Below I talk more about how these parameters affect the accuracy of this method and the amount of time the scene classification takes. </p>
+
+	
+
+
+	<!-- <pre><code>
+	%example code
+	for i = 1:length(offset)
+	    source = imread(sprintf('%s/source_%02d.jpg',data_dir,i));
+	    mask   = imread(sprintf('%s/mask_%02d.jpg',data_dir,i));
+	    target = imread(sprintf('%s/target_%02d.jpg',data_dir,i));
+
+	</code></pre> -->
+
+	<div class="container2">
+		<center>
+			<table border =1>
+				<caption> "Bag of SIFT with Nearest neighbor classifier (vocab_size = 200)" </caption>
+				<tr>
+					<td> Vocab Step Size </td>
+					<td> BoS Step Size </td>
+					<td> Accuracy </td>
+					<td> Vocab Time </td>
+					<td> Total Computation Time </td>
+				</tr>
+				<tr>
+					<td> 10 </td>
+					<td> 5 </td>
+					<td> 52.0% </td>
+					<td> 139 sec </td>
+					<td> 681 sec </td>
+				</tr>
+				<tr>
+					<td> 15 </td>
+					<td> 7 </td>
+					<td> 51.1% </td>
+					<td> 89 sec </td>
+					<td> 381 sec </td>
+				</tr>
+				<tr>
+					<td> 20 </td>
+					<td> 10 </td>
+					<td> 49.3% </td>
+					<td> 49 sec </td>
+					<td> 208 sec </td>
+				</tr>
+				<tr>
+					<td> 25 </td>
+					<td> 12 </td>
+					<td> 46.3% </td>
+					<td> 33 sec </td>
+					<td> 151 sec </td>
+				</tr>
+				<tr>
+					<td> 30 </td>
+					<td> 15 </td>
+					<td> 46.0% </td>
+					<td> 35 sec </td>
+					<td> 137 sec </td>
+				</tr>
+			</table>
+
+			<img src="chart1.png"; width = "40%"/> <img src="chart2.png"; width = "40%"/>
+		</center>
+	</div>
+
+	<p>
+		The table above was created by varying the vocab step size and Bag of SIFT step size, which changes the sampling density of each. By varying these step sizes, I recorded the effects on accuracy, vocab computation time, and total computation time. This table shows two interesting relationships depicted in the above graphs. The graph of the left shows, for this word size, the amount of time it takes increase accuracy increases exponentially and approaches a maximum accuracy somewhere before 60%. The graph on the right shows that the total computation time increases at an exponentially increasing rate as the vocab step size gets smaller and the vocab becomes more dense. The graph also shows that making the steps larger only helps make the computation faster to an extent, as the benefits of doing so to speed and the benefits to accuracy decline as the step size increases.
+	</p>
+
+<center>
+<p>
+<br>
+Confusion matrix for BoS and Nearest Neighbor method with the parameters:
+<br>
+Vocab step size:20, BoS step size:10, Vocab size:200
+<br>
+<img src="BoSNN.png">
+<br>
+Accuracy (mean of diagonal of confusion matrix) is 0.502
+<p>
+</center>
+		
+
+<h3>Bag of SIFT Representation and Linear SVM Classifier</h3>
+
+<p> 	In order to further increase the scene classification accuracy, I use the Bag of SIFT representation that I created and classifiers trained by Linear SVMs. Although linear classifiers are very simple, they can learn which dimensions of a feature are less relevant and give them a lower weight. I train 15 1-vs-all SVMs to solve the 15-way classification problem of deciding which category a test case belongs in. These 15 classifiers are then used to evaluate each test case and whichever classifier is most confident assigns its category to the test case. This classifier introduces another variable, lambda, which controls how regularized the model is when learning a SVM. Through testing, I found for this application, a lambda value of .00025 gave me the most accurate results. Below I show more about how changing the vocab size in the Bag of SIFT representation affects the accuracy and computation time.
+</p>
+
+<h4></h4>
+	<center>
+	<table border=1 width=600>
+		<caption> Effects of changing vocab size of Bag of SIFT with Linear SVM (vocab step= 20, BoS step = 10) </caption>
+		<tr>
+			<td> Vocab Size </td>
+			<td> Accuracy </td>
+			<td> Total Computation Time </td>
+		</tr>
+		<tr>
+			<td> 10 </td>
+			<td> 43.6% </td>
+			<td> 54 sec </td>
+		</tr>
+		<tr>
+			<td> 20 </td>
+			<td> 50.0% </td>
+			<td> 63 sec </td>
+		</tr>
+		<tr>
+			<td> 50 </td>
+			<td> 57.1% </td>
+			<td> 90 sec </td>
+		</tr>
+		<tr>
+			<td> 100 </td>
+			<td> 60.5% </td>
+			<td> 132 sec </td>
+		</tr>
+		<tr>
+			<td> 200 </td>
+			<td> 61.5% </td>
+			<td> 211 sec </td>
+		</tr>
+		<tr>
+			<td> 400 </td>
+			<td> 66.9% </td>
+			<td> 383 sec </td>
+		</tr>
+		<tr>
+			<td> 1000 </td>
+			<td> 65.7% </td>
+			<td> 875 sec </td>
+		</tr>
+		<tr>
+			<td> 10000 </td>
+			<td> 67.5% </td>
+			<td> 8434 sec </td>
+		</tr>
+	</table>
+	</center>
+
+	<p>
+The table above shows the effects of changing the vocab size for Bag of SIFT representation using the linear SVM classifier with fixed step sizes. As you can see, accuracy increases as vocab size increases, but it does so at an increasing cost of computation time and for decreasing gains in accuracy. It is also interesting to note, computation time increases linearly with vocab size, which makes it easy to predict the computation time for any vocab size.	</p>
+
+<center>
+<p>
+<br>
+Confusion matrix for BoS and Linear SVM method with the parameters:
+<br>
+Vocab step size:20, BoS step size:10, Vocab size:200, Lambda:0.00025
+<br>
+<img src="BoSSVM.png">
+<br>
+Accuracy (mean of diagonal of confusion matrix) is 0.625
+<p>
+</center>
+
+<h3>Best Results</h3>
+	<p>
+The results with greatest accuracy I achieved can be found below. I was able to achieve this accuracy of 67.5% using the Bag of SIFT representation and Linear SVM classifier, with a vocab step size of 20, a Bag of SIFT step size of 10, and a vocab size of 10,000. I experimented with many different values for Lambda, the regularization parameter used in the SVM classifier, and found that a value of .00025 was producing the best results. The tradeoff for having such a large vocab size was that the program took 2.5 hours to complete, but it did produce good results. I expect from the data that I gathered, that even better results could be achieved using a vocab step size of 10, a BoS step size of 5, and a vocab size of 10,000, but this would greatly increase the computation time to a point which it was not feasible for me to test. Even with these optimal parameter choices, the accuracy would still only be approaching 70% which is not much of a difference for the time complexity tradeoff.	</p>
+
+
+
+<p>
+<center>
+<h1>Scene classification results visualization</h1>
+<img src="confusion_matrix.png">
+
+<br>
+Accuracy (mean of diagonal of confusion matrix) is 0.675
+<p>
+
+<table border=0 cellpadding=4 cellspacing=1>
+<tr>
+<th>Category name</th>
+<th>Accuracy</th>
+<th colspan=2>Sample training images</th>
+<th colspan=2>Sample true positives</th>
+<th colspan=2>False positives with true label</th>
+<th colspan=2>False negatives with wrong predicted label</th>
+</tr>
+<tr>
+<td>Kitchen</td>
+<td>0.590</td>
+<td bgcolor=LightBlue><img src="thumbnails/Kitchen_image_0013.jpg" width=100 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Kitchen_image_0133.jpg" width=93 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Kitchen_image_0056.jpg" width=99 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Kitchen_image_0120.jpg" width=113 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Industrial_image_0038.jpg" width=94 height=75><br><small>Industrial</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Store_image_0068.jpg" width=100 height=75><br><small>Store</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Kitchen_image_0051.jpg" width=100 height=75><br><small>Bedroom</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Kitchen_image_0018.jpg" width=100 height=75><br><small>Bedroom</small></td>
+</tr>
+<tr>
+<td>Store</td>
+<td>0.510</td>
+<td bgcolor=LightBlue><img src="thumbnails/Store_image_0253.jpg" width=114 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Store_image_0198.jpg" width=51 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Store_image_0125.jpg" width=57 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Store_image_0034.jpg" width=106 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/InsideCity_image_0087.jpg" width=75 height=75><br><small>InsideCity</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Bedroom_image_0066.jpg" width=100 height=75><br><small>Bedroom</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Store_image_0022.jpg" width=88 height=75><br><small>Kitchen</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Store_image_0102.jpg" width=100 height=75><br><small>LivingRoom</small></td>
+</tr>
+<tr>
+<td>Bedroom</td>
+<td>0.470</td>
+<td bgcolor=LightBlue><img src="thumbnails/Bedroom_image_0027.jpg" width=98 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Bedroom_image_0072.jpg" width=100 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Bedroom_image_0161.jpg" width=100 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Bedroom_image_0016.jpg" width=97 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Industrial_image_0148.jpg" width=100 height=75><br><small>Industrial</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/LivingRoom_image_0007.jpg" width=109 height=75><br><small>LivingRoom</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Bedroom_image_0081.jpg" width=107 height=75><br><small>Office</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Bedroom_image_0029.jpg" width=133 height=75><br><small>Kitchen</small></td>
+</tr>
+<tr>
+<td>LivingRoom</td>
+<td>0.460</td>
+<td bgcolor=LightBlue><img src="thumbnails/LivingRoom_image_0125.jpg" width=100 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/LivingRoom_image_0053.jpg" width=100 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/LivingRoom_image_0134.jpg" width=100 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/LivingRoom_image_0004.jpg" width=100 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Coast_image_0110.jpg" width=75 height=75><br><small>Coast</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Store_image_0012.jpg" width=100 height=75><br><small>Store</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/LivingRoom_image_0096.jpg" width=100 height=75><br><small>Highway</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/LivingRoom_image_0043.jpg" width=100 height=75><br><small>TallBuilding</small></td>
+</tr>
+<tr>
+<td>Office</td>
+<td>0.910</td>
+<td bgcolor=LightBlue><img src="thumbnails/Office_image_0054.jpg" width=109 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Office_image_0056.jpg" width=130 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Office_image_0044.jpg" width=100 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Office_image_0058.jpg" width=118 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/LivingRoom_image_0087.jpg" width=100 height=75><br><small>LivingRoom</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Bedroom_image_0081.jpg" width=107 height=75><br><small>Bedroom</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Office_image_0174.jpg" width=117 height=75><br><small>Bedroom</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Office_image_0130.jpg" width=93 height=75><br><small>Bedroom</small></td>
+</tr>
+<tr>
+<td>Industrial</td>
+<td>0.440</td>
+<td bgcolor=LightBlue><img src="thumbnails/Industrial_image_0198.jpg" width=67 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Industrial_image_0186.jpg" width=118 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Industrial_image_0139.jpg" width=55 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Industrial_image_0141.jpg" width=100 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/TallBuilding_image_0098.jpg" width=75 height=75><br><small>TallBuilding</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/LivingRoom_image_0135.jpg" width=116 height=75><br><small>LivingRoom</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Industrial_image_0035.jpg" width=77 height=75><br><small>InsideCity</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Industrial_image_0056.jpg" width=115 height=75><br><small>LivingRoom</small></td>
+</tr>
+<tr>
+<td>Suburb</td>
+<td>0.910</td>
+<td bgcolor=LightBlue><img src="thumbnails/Suburb_image_0047.jpg" width=113 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Suburb_image_0197.jpg" width=113 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Suburb_image_0074.jpg" width=113 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Suburb_image_0075.jpg" width=113 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/InsideCity_image_0126.jpg" width=75 height=75><br><small>InsideCity</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/OpenCountry_image_0060.jpg" width=75 height=75><br><small>OpenCountry</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Suburb_image_0046.jpg" width=113 height=75><br><small>Street</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Suburb_image_0024.jpg" width=113 height=75><br><small>Street</small></td>
+</tr>
+<tr>
+<td>InsideCity</td>
+<td>0.630</td>
+<td bgcolor=LightBlue><img src="thumbnails/InsideCity_image_0221.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/InsideCity_image_0143.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/InsideCity_image_0010.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/InsideCity_image_0039.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Kitchen_image_0080.jpg" width=100 height=75><br><small>Kitchen</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Store_image_0060.jpg" width=57 height=75><br><small>Store</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/InsideCity_image_0065.jpg" width=75 height=75><br><small>Street</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/InsideCity_image_0043.jpg" width=75 height=75><br><small>Store</small></td>
+</tr>
+<tr>
+<td>TallBuilding</td>
+<td>0.760</td>
+<td bgcolor=LightBlue><img src="thumbnails/TallBuilding_image_0210.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/TallBuilding_image_0288.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/TallBuilding_image_0021.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/TallBuilding_image_0001.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Industrial_image_0130.jpg" width=109 height=75><br><small>Industrial</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Store_image_0015.jpg" width=100 height=75><br><small>Store</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/TallBuilding_image_0022.jpg" width=75 height=75><br><small>Kitchen</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/TallBuilding_image_0084.jpg" width=75 height=75><br><small>Coast</small></td>
+</tr>
+<tr>
+<td>Street</td>
+<td>0.660</td>
+<td bgcolor=LightBlue><img src="thumbnails/Street_image_0204.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Street_image_0003.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Street_image_0147.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Street_image_0026.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Industrial_image_0142.jpg" width=54 height=75><br><small>Industrial</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Industrial_image_0149.jpg" width=102 height=75><br><small>Industrial</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Street_image_0055.jpg" width=75 height=75><br><small>InsideCity</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Street_image_0079.jpg" width=75 height=75><br><small>InsideCity</small></td>
+</tr>
+<tr>
+<td>Highway</td>
+<td>0.790</td>
+<td bgcolor=LightBlue><img src="thumbnails/Highway_image_0188.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Highway_image_0098.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Highway_image_0119.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Highway_image_0030.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Street_image_0016.jpg" width=75 height=75><br><small>Street</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/OpenCountry_image_0031.jpg" width=75 height=75><br><small>OpenCountry</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Highway_image_0034.jpg" width=75 height=75><br><small>Coast</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Highway_image_0150.jpg" width=75 height=75><br><small>Coast</small></td>
+</tr>
+<tr>
+<td>OpenCountry</td>
+<td>0.430</td>
+<td bgcolor=LightBlue><img src="thumbnails/OpenCountry_image_0360.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/OpenCountry_image_0291.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/OpenCountry_image_0021.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/OpenCountry_image_0018.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Coast_image_0014.jpg" width=75 height=75><br><small>Coast</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Industrial_image_0105.jpg" width=113 height=75><br><small>Industrial</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/OpenCountry_image_0110.jpg" width=75 height=75><br><small>Highway</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/OpenCountry_image_0115.jpg" width=75 height=75><br><small>Coast</small></td>
+</tr>
+<tr>
+<td>Coast</td>
+<td>0.860</td>
+<td bgcolor=LightBlue><img src="thumbnails/Coast_image_0193.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Coast_image_0307.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Coast_image_0002.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Coast_image_0077.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/OpenCountry_image_0010.jpg" width=75 height=75><br><small>OpenCountry</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/OpenCountry_image_0073.jpg" width=75 height=75><br><small>OpenCountry</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Coast_image_0110.jpg" width=75 height=75><br><small>LivingRoom</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Coast_image_0005.jpg" width=75 height=75><br><small>OpenCountry</small></td>
+</tr>
+<tr>
+<td>Mountain</td>
+<td>0.750</td>
+<td bgcolor=LightBlue><img src="thumbnails/Mountain_image_0028.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Mountain_image_0102.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Mountain_image_0121.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Mountain_image_0065.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/OpenCountry_image_0040.jpg" width=75 height=75><br><small>OpenCountry</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/OpenCountry_image_0064.jpg" width=75 height=75><br><small>OpenCountry</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Mountain_image_0095.jpg" width=75 height=75><br><small>Street</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Mountain_image_0100.jpg" width=75 height=75><br><small>Forest</small></td>
+</tr>
+<tr>
+<td>Forest</td>
+<td>0.960</td>
+<td bgcolor=LightBlue><img src="thumbnails/Forest_image_0228.jpg" width=75 height=75></td>
+<td bgcolor=LightBlue><img src="thumbnails/Forest_image_0327.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Forest_image_0060.jpg" width=75 height=75></td>
+<td bgcolor=LightGreen><img src="thumbnails/Forest_image_0082.jpg" width=75 height=75></td>
+<td bgcolor=LightCoral><img src="thumbnails/Highway_image_0032.jpg" width=75 height=75><br><small>Highway</small></td>
+<td bgcolor=LightCoral><img src="thumbnails/Mountain_image_0100.jpg" width=75 height=75><br><small>Mountain</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Forest_image_0128.jpg" width=75 height=75><br><small>Street</small></td>
+<td bgcolor=#FFBB55><img src="thumbnails/Forest_image_0124.jpg" width=75 height=75><br><small>Mountain</small></td>
+</tr>
+<tr>
+<th>Category name</th>
+<th>Accuracy</th>
+<th colspan=2>Sample training images</th>
+<th colspan=2>Sample true positives</th>
+<th colspan=2>False positives with true label</th>
+<th colspan=2>False negatives with wrong predicted label</th>
+</tr>
+</table>
+</center>
+
+<div style="clear:both" >
+</div>
+</body>
+</html>
